@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+
+*/
+.sizing-content {
+  field-sizing: content;
+}
+
+* {
+  box-sizing: border-box;
+  border-style: hidden;
+  font-family: "Montserrat", sans-serif;
+}
+
+.bg-animation-keyframe {
+  animation: bg-wave 5s ease-in-out infinite;
+}
+
+.line {
+  border-left: 1px solid #29a6b4;
+  height: 0;
+  position: absolute;
+  left: 50%;
+  animation: line-animation 2s ease-in-out infinite;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes line-animation {
+  0% {
+    height: 0;
+    top: 0;
+  }
+
+  50% {
+    height: 80%;
+    top: 0;
+  }
+
+  100% {
+    height: 0;
+    top: 80%;
+  }
+}
+
+@keyframes bg-wave {
+  0% {
+    transform: translateY(0px);
+  }
+
+  25% {
+    transform: translateY(-10px);
+  }
+
+  50% {
+    transform: translateY(0px);
+  }
+
+  75% {
+    transform: translateY(10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+body,
+input,
+textarea,
+button {
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.8);
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom,
+      hsl(var(--primary) / 0.8),
+      hsl(var(--primary) / 0.6));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom,
+      hsl(var(--primary)),
+      hsl(var(--primary) / 0.8));
+  transform: scale(1.05);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.8) hsl(var(--muted) / 0.8);
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    --primary: 186 66% 44%;
+    /* #29A6B4 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 161 30% 75%;
+    /* #9ED2C3 */
+    --secondary-foreground: 180 30% 20%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 45%;
+    /* #737373 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 186 66% 44%;
+
+    --radius: 0.75rem;
+
+    --gradient-primary: linear-gradient(135deg,
+        hsl(186 66% 44%),
+        hsl(161 30% 75%));
+    --gradient-secondary: linear-gradient(135deg,
+        hsl(186 66% 44%),
+        hsl(0 0% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --shadow-glow: 0 10px 60px hsl(186 66% 44% / 0.25);
+    --shadow-accent: 0 8px 40px hsl(0 0% 45% / 0.2);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 26%;
+    --sidebar-primary: 0 0% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 186 66% 44%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 186 66% 54%;
+    /* Lighter shade for dark mode */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 0% 45%;
+    /* #737373 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 186 66% 54%;
+
+    --gradient-primary: linear-gradient(135deg,
+        hsl(186 66% 54%),
+        hsl(161 30% 45%));
+    --gradient-secondary: linear-gradient(135deg,
+        hsl(186 66% 54%),
+        hsl(0 0% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 10%), hsl(0 0% 14%));
+    --shadow-glow: 0 10px 80px hsl(186 66% 54% / 0.4);
+    --shadow-accent: 0 8px 60px hsl(0 0% 45% / 0.3);
+
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 186 66% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 186 66% 54%;
+  }
+}
+
+
+@media (max-width:576px) {
+  .sizing-content {
+    field-sizing: inherit;
+  }
+}
