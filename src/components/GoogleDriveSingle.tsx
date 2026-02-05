@@ -140,7 +140,6 @@ export function GoogleDriveSingle({ user, setDriveConnected }: Props) {
         //     }
         // };
 
-        // await revokeGoogleAccess("1//0gzLfjI4EmO_bCgYIARAAGBASNwF-L9IrsaueqVxyeT3ZPXgm3Qyfm0s4U48p4S_uKHcF6oQZTAm3tnP__l6dRIfHqL04IFZ6y3Q")
 
         await removeDriveConnection(user.id);
         toast({
