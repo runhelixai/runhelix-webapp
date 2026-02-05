@@ -129,18 +129,6 @@ export function GoogleDriveSingle({ user, setDriveConnected }: Props) {
 
     const handleDisconnect = async () => {
         if (!user?.id) return;
-        // const revokeGoogleAccess = async (accessToken: string) => {
-        //     try {
-        //         await fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`,
-        //             { method: "POST", headers: { "Content-type": "application/x-www-form-urlencoded" } }
-        //         );
-        //         console.log("Google Drive disconnected");
-        //     } catch (error) {
-        //         console.error("Failed to revoke access", error);
-        //     }
-        // };
-
-
         await removeDriveConnection(user.id);
         toast({
             title: "Drive disconnected",
