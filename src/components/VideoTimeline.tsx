@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Slider } from "@/components/ui/slider"; // Keep this for volume slider
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { Loader2, Play, Pause, RotateCcw, Download, Eye, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Play, Pause, Download, Eye, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ interface VideoTimelineProps {
     onSeek: (frame: number) => void;
     onPlayPause: () => void;
     isPlaying: boolean;
-    onReset: () => void;
+
     onDownload: () => void;
     onPreviewTrim: () => void;
     isDownloading: boolean;
@@ -35,7 +35,7 @@ const VideoTimeline = ({
     onSeek,
     onPlayPause,
     isPlaying,
-    onReset,
+
     onDownload,
     onPreviewTrim,
     isDownloading,
@@ -188,10 +188,7 @@ const VideoTimeline = ({
                         Trimmed: <span className="text-[#29A6B4] font-medium">{trimDuration.toFixed(1)}s</span>
                     </span>
 
-                    <Button variant="outline" size="sm" onClick={onReset} className="border-gray-700 text-gray-300 hover:text-white bg-transparent hover:bg-white/10 px-2 md:px-3">
-                        <RotateCcw className="w-4 h-4 md:mr-2" />
-                        <span className="hidden md:inline">Reset</span>
-                    </Button>
+
 
                     <Button variant="outline" size="sm" onClick={onDownload} disabled={isDownloading} className="bg-gradient-to-r from-[#29a6b4] to-[#9ed2c3] text-white hover:opacity-90 border-0 px-3 md:px-4">
                         {isDownloading ? <Loader2 className="w-4 h-4 md:mr-2 animate-spin" /> : <Download className="w-4 h-4 md:mr-2" />}

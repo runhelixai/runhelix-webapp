@@ -354,12 +354,7 @@ const FullscreenPlayer = ({
         }
     };
 
-    const handleReset = () => {
-        if (videoMetadata) {
-            setTrimRange([0, videoMetadata.durationInFrames]);
-            setIsPreviewingTrim(false);
-        }
-    };
+
 
     const handleDownload = async () => {
         setIsDownloading(true);
@@ -436,7 +431,7 @@ const FullscreenPlayer = ({
                         onSeek={handleSeek}
                         onPlayPause={handlePlayPause}
                         isPlaying={isPlaying}
-                        onReset={handleReset}
+
                         onDownload={handleDownload}
                         onPreviewTrim={handlePreviewTrim}
                         isDownloading={isDownloading}
