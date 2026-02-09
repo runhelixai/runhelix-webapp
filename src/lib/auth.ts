@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           try {
-            let profile = await withTimeout(getUserProfile(session.user.id), 15000, "getUserProfile");
+            let profile = await withTimeout(getUserProfile(session.user.id), 1000, "getUserProfile");
             if (!profile) {
               if (processedUsers.current.has(session.user.id)) {
                 setIsLoading(false); // Ensure loading state is cleared even if we skip
@@ -293,10 +293,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Initial session check
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 15000, "getSession");
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 1000, "getSession");
         if (session?.user) {
           try {
-            const profile = await withTimeout(getUserProfile(session.user.id), 5000, "getUserProfile_initial");
+            const profile = await withTimeout(getUserProfile(session.user.id), 1000, "getUserProfile_initial");
             setUserProfile(profile);
           } catch (err) {
             console.error("Initial profile fetch failed:", err);
