@@ -65,6 +65,7 @@ import {
 import AspectRatioDropdown from "../components/AspectRatioDropdown ";
 import ProductDropdown from "../components/ProductDropdown";
 import VideoTypeDropdown from "../components/VideoTypeDropdown";
+import VideoModelDropdown from "../components/VideoModelDropdown";
 import { commonApiEndpoints } from "@/helpers/commonApiEndpoints";
 import { config } from "@/lib/config";
 import MobileUserMenu from "@/components/MobileUserMenu";
@@ -214,6 +215,7 @@ const GenerateVideo = () => {
     "image-to-video"
   );
   const [videoType, setVideoType] = useState<string>("");
+  const [videoModel, setVideoModel] = useState<string>("sora-2");
   const [aspectRatio, setAspectRatio] = useState<string>("portrait");
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -962,6 +964,10 @@ const GenerateVideo = () => {
           const payload: any = {
             user_content: currentDescription,
             image_ratio: String(aspectRatio),
+            model: videoModel, // Include selected video model
+            seed: 42,
+            language: "english",
+            promo_type: "animation",
           };
 
           const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
@@ -2267,12 +2273,21 @@ const GenerateVideo = () => {
                       selectedProductId={selectedProduct?.id}
                     />
 
+
                     <AspectRatioDropdown
                       aspectRatio={aspectRatio}
                       setAspectRatio={setAspectRatio}
                       isMobile={isMobile}
                       mode={mode}
                     />
+
+                    {mode === "image-to-video" && (
+                      <VideoModelDropdown
+                        videoModel={videoModel}
+                        setVideoModel={setVideoModel}
+                        isMobile={isMobile}
+                      />
+                    )}
 
                     <button
                       id="tour-generate-button"
