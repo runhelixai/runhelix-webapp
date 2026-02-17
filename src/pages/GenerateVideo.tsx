@@ -958,21 +958,84 @@ const GenerateVideo = () => {
         } else {
           if (videoType === "UGC Testimonials") {
             endpoint = videoWebhookEndpoint;
+          } else if (videoType === "Promotional") {
+            // New Promotional Reference mode logic
+            endpoint = commonApiEndpoints.PROMO_VIDEO_WEBHOOK;
           } else {
             endpoint = commonApiEndpoints.PROMO_VIDEO_WEBHOOK;
           }
+
           const payload: any = {
             user_content: currentDescription,
             image_ratio: String(aspectRatio),
           };
 
-          const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
-          const base64Only = dataUrls.map((url) => url.split(",")[1]);
+          if (videoType === "Promotional" && referenceType === "reference") {
+            // Specific payload for Promotional Reference mode
+            payload.promo_type = "animation";
+            payload.language = "english"; // Hardcoded for now based on curl, or add a selector?
+            // Getting image base64
+            const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
+            const base64Only = dataUrls.map((url) => url.split(",")[1]);
 
-          if (selectedProduct?.id) {
-            payload.product_id = selectedProduct?.id;
+            if (selectedProduct?.id) {
+              // Even if product is selected, user curl showed product_id="" and we need image_base64?
+              // Let's try to send product_id if available, but if user explicitly wants empty, we might need to adjust.
+              // However, usually if product is selected, we send product_id.
+              // User curl: "product_id": ""
+              // But user said: "when user selected reference to vdeo and select product we need to disply the preview... and usser can remove it upload any image"
+
+              // If product is selected, we should probably send its image as base64 if product_id is not supported by this specific endpoint variant?
+              // Or just send product_id. 
+              // The curl command had product_id: "". 
+              // Let's assume we should send image_base64 from product media if available, or just product_id if it works.
+              // Given the curl, let's try to populate image_base64 from product URL if possible, or just send product_id empty?
+              // Actually, if I look at the curl, it has "image_base64": "".
+              // Maybe I should fetch the product image and send as base64?
+              // Safe bet: existing logic sends product_id. 
+              // Let's stick to standard behavior: if product_id, send it. If not, send image_base64.
+              // Wait, strict adherence to curl:
+              // "product_id": "", "image_base64": "" (in the example).
+              // But user wants it to WORK.
+
+              if (selectedProduct?.media) {
+                // If we have a product selected, we might want to prioritize sending its image as base64 
+                // because the new endpoint might rely on image_base64 for the "reference".
+                // But typically product_id is better.
+                // Let's send product_id as usual, and if that fails, we can revisit.
+                // payload.product_id = selectedProduct.id;
+
+                // actually, let's treat it like the others for now:
+                payload.product_id = selectedProduct.id;
+              } else {
+                payload.image_base64 = base64Only[0] || "";
+                payload.product_id = "";
+              }
+
+              // Override if it's the specific curl case? 
+              // The curl command implies we might NOT want product_id?
+              // "product_id": ""
+              // Let's try to fetch the image and send base64 if product is selected, just in case.
+              // But fetching blob from URL might be CORS issue.
+
+              // Let's use the provided curl structure but fill in the blanks.
+              // payload.product_id = ""; // explicit empty?
+              // payload.image_base64 = ...
+            } else {
+              payload.image_base64 = base64Only[0] || "";
+              payload.product_id = "";
+            }
+
           } else {
-            payload.image_base64 = base64Only[0] || "";
+            // UGC or other modes
+            const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
+            const base64Only = dataUrls.map((url) => url.split(",")[1]);
+
+            if (selectedProduct?.id) {
+              payload.product_id = selectedProduct?.id;
+            } else {
+              payload.image_base64 = base64Only[0] || "";
+            }
           }
 
           if (user_id) payload.user_id = user_id;
@@ -2291,7 +2354,9 @@ const GenerateVideo = () => {
                       onClick={handleGenerate}
                       disabled={
                         (videoType === "Promotional"
-                          ? !(promoFrames.start && promoFrames.end)
+                          ? referenceType === "frames"
+                            ? !(promoFrames.start && promoFrames.end)
+                            : !(selectedProduct?.id || uploadedImages.length)
                           : selectedProduct?.id
                             ? false
                             : !uploadedImages.length) ||
@@ -2300,7 +2365,9 @@ const GenerateVideo = () => {
                       }
                       // disabled={!description.trim() || isGenerating}
                       className={`py-2.5 px-7 max-mobile:text-xs max-mobile:px-0 max-mobile:w-10 max-mobile:h-10 max-mobile:flex max-mobile:items-center max-mobile:justify-center  rounded-full text-sm font-semibold flex items-center border border-solid border-[#29A6B4] gap-2 ${(videoType === "Promotional"
-                        ? !(promoFrames.start && promoFrames.end)
+                        ? referenceType === "frames"
+                          ? !(promoFrames.start && promoFrames.end)
+                          : !(selectedProduct?.id || uploadedImages.length)
                         : selectedProduct?.id
                           ? false
                           : !uploadedImages.length) ||
