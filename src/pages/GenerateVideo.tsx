@@ -65,6 +65,7 @@ import {
 import AspectRatioDropdown from "../components/AspectRatioDropdown ";
 import ProductDropdown from "../components/ProductDropdown";
 import VideoTypeDropdown from "../components/VideoTypeDropdown";
+import ReferenceTypeDropdown from "../components/ReferenceTypeDropdown";
 import { commonApiEndpoints } from "@/helpers/commonApiEndpoints";
 import { config } from "@/lib/config";
 import MobileUserMenu from "@/components/MobileUserMenu";
@@ -215,6 +216,7 @@ const GenerateVideo = () => {
   );
   const [videoType, setVideoType] = useState<string>("");
   const [aspectRatio, setAspectRatio] = useState<string>("portrait");
+  const [referenceType, setReferenceType] = useState<"reference" | "frames">("reference");
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(1);
@@ -928,7 +930,7 @@ const GenerateVideo = () => {
 
       if (mode === "image-to-video") {
         // JSON payload
-        if (videoType === "Promotional") {
+        if (videoType === "Promotional" && referenceType === "frames") {
           endpoint = commonApiEndpoints.PROMO_TRANSITION_VIDEO_WEBHOOK;
           const payload: any = {
             user_content: currentDescription || "Create a promotional video",
@@ -2006,7 +2008,7 @@ const GenerateVideo = () => {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                {(uploadedImages.length > 0 || (selectedProduct?.media && videoType !== "Promotional")) && !(videoType === "Promotional" && promoFrames.start && promoFrames.end) ? (
+                {(uploadedImages.length > 0 || selectedProduct?.media) && !(videoType === "Promotional" && referenceType === "frames") ? (
                   <div className="px-5 pt-5 flex flex-wrap gap-3">
                     {uploadedImages.map((img, index) => (
                       <div
@@ -2037,7 +2039,7 @@ const GenerateVideo = () => {
                         </button>
                       </div>
                     ))}
-                    {selectedProduct?.media && videoType !== "Promotional" && (
+                    {selectedProduct?.media && (
                       <div
                         className="w-20 h-20 cursor-pointer relative"
                       >
@@ -2061,7 +2063,7 @@ const GenerateVideo = () => {
                   </div>
                 ) : null}
 
-                {videoType === "Promotional" ? (
+                {videoType === "Promotional" && referenceType === "frames" ? (
                   <div className="px-5 pt-5 flex flex-wrap gap-3">
                     {/* Start Frame Slot */}
                     <div
@@ -2178,7 +2180,7 @@ const GenerateVideo = () => {
                   placeholder="Describe your next video or paste a script..."
                   required
                 />
-                <div className="hidden max-mobile:block max-mobile:px-3 max-mobile:pb-2">
+                {/* <div className="hidden max-mobile:block max-mobile:px-3 max-mobile:pb-2">
                   <button
                     type="button"
                     onClick={triggerFileInput}
@@ -2187,7 +2189,7 @@ const GenerateVideo = () => {
                     <Paperclip className="w-4 h-4 shrink-0" />
                     <span>Media</span>
                   </button>
-                </div>
+                </div> */}
                 <div
                   className={`flex justify-between pb-4 max-mobile:px-3 max-mobile:flex-row px-5 ${isMobile && user?.id
                     ? "flex-col gap-5 max-mobile:gap-2 items-start"
@@ -2203,14 +2205,14 @@ const GenerateVideo = () => {
                     className="hidden"
                   />
                   <div className="flex items-center gap-3">
-                    <button
+                    {/* <button
                       type="button"
                       onClick={triggerFileInput}
                       className="inline-flex max-mobile:text-xs max-mobile:hidden items-center gap-2 rounded-full px-5 py-2.5 max-mobile:px-2.5 text-sm font-semibold text-white border bg-gradient-to-r from-[#29A6B4] to-[#9ED2C3]             hover:bg-[#29A6B4]/10 transition-colors focus:outline-none focus:ring-2 shadow-sm"
                     >
                       <Paperclip className="w-4 h-4 shrink-0" />
                       <span>Media</span>
-                    </button>
+                    </button> */}
                     {!user?.id ? (
                       <VideoTypeDropdown
                         mode={mode}
@@ -2219,20 +2221,29 @@ const GenerateVideo = () => {
                         isMobile={isMobile}
                       />
                     ) : (
-                      <ProductDropdown
-                        userId={user?.id}
-                        products={products}
-                        selectedProduct={selectedProduct}
-                        onAddProduct={() => {
-                          setProductDrawerView("add");
-                          setIsProductDrawerOpen(true);
-                        }}
-                        onViewAll={() => {
-                          setProductDrawerView("list");
-                          setIsProductDrawerOpen(true);
-                        }}
-                        isMobile={isMobile}
-                      />
+                      <>
+                        <ProductDropdown
+                          userId={user?.id}
+                          products={products}
+                          selectedProduct={selectedProduct}
+                          onAddProduct={() => {
+                            setProductDrawerView("add");
+                            setIsProductDrawerOpen(true);
+                          }}
+                          onViewAll={() => {
+                            setProductDrawerView("list");
+                            setIsProductDrawerOpen(true);
+                          }}
+                          isMobile={isMobile}
+                        />
+                        {videoType === "Promotional" && (
+                          <ReferenceTypeDropdown
+                            value={referenceType}
+                            onChange={setReferenceType}
+                            isMobile={isMobile}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -2330,8 +2341,8 @@ const GenerateVideo = () => {
               ""
             )}
           </div>
-        </section>
-      </div>
+        </section >
+      </div >
       <div id="past-generations">
         {pastGenerations.length == 0 ? (
           ""

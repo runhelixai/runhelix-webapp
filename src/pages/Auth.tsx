@@ -436,17 +436,77 @@ const Auth = () => {
               </Button>
             </div>
 
-            <Button
-              type="button"
-              variant="default"
-              onClick={toggleAuthMode}
-              className="w-full h-12 !text-base !font-medium mt-4 flex items-center justify-center"
-              disabled={isSubmitting}
-            >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in"}
-            </Button>
+            {isLogin ? (
+              <>
+                <Button
+                  type="button"
+                  variant="reverse_default"
+                  onClick={toggleAuthMode}
+                  className="w-full h-12 !text-base !font-medium mt-4 flex items-center justify-center"
+                  disabled={isSubmitting}
+                >
+                  Don't have an account? Sign up
+                </Button>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-background px-3 text-muted-foreground">
+                      OR
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 !text-base !font-medium flex items-center justify-center gap-3 ring-1 ring-gray-500"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting}
+                >
+                  {commonSvgIcon("google")}
+                  Sign in with Google
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-background px-3 text-muted-foreground">
+                      OR
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 !text-base !font-medium flex items-center justify-center gap-3 ring-1 ring-gray-500"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting}
+                >
+                  {commonSvgIcon("google")}
+                  Sign up with Google
+                </Button>
+
+                <div className="mt-4 text-center">
+                  <span className="text-muted-foreground text-base">Already have an account? </span>
+                  <button
+                    type="button"
+                    onClick={toggleAuthMode}
+                    className="text-primary underline underline-offset-4 font-medium text-base ml-1"
+                    disabled={isSubmitting}
+                  >
+                    Sign in
+                  </button>
+                </div>
+              </>
+            )}
             {/* <div className="flex hover:underline text-primary items-center gap-1 justify-center">
               <MoveLeft className="text-primary w-4" />
               <NavLink to="/generate" className="block ">
@@ -455,28 +515,6 @@ const Auth = () => {
                 </p>
               </NavLink>
             </div> */}
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-3 text-muted-foreground">
-                  OR
-                </span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-12 !text-base !font-medium flex items-center justify-center gap-3 ring-1 ring-gray-500"
-              onClick={handleGoogleSignIn}
-              disabled={isSubmitting}
-            >
-              {commonSvgIcon("google")}
-              {isLogin ? "Sign in with Google" : "Sign up with Google"}
-            </Button>
           </form>
         </CardContent>
       </Card>

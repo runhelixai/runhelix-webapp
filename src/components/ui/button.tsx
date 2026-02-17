@@ -19,6 +19,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        reverse_default:
+          "text-primary-foreground text-base bg-[linear-gradient(90deg,#9ED2C3_0%,#29A6B4_100%)] hover:bg-[linear-gradient(90deg,#29A6B4_0%,#9ED2C3_100%)]",
       },
       size: {
         default: "h-10 px-4 py-2",
