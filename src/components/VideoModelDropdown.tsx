@@ -26,7 +26,7 @@ const VideoModelDropdown: React.FC<Props> = ({
         { label: "Sora 2", value: "sora-2" },
         { label: "Veo 3.1", value: "veo-3.1" },
         { label: "Seedance 1.5", value: "bytedance/seedance-v1.5-pro/image-to-video" },
-        { label: "Kling 2.5 Turbo Pro", value: "kwaivgi/kling-v2.5-turbo-pro/image-to-video" },
+        // { label: "Kling 2.5 Turbo Pro", value: "kwaivgi/kling-v2.5-turbo-pro/image-to-video" },
         { label: "Kling 2.6 pro", value: "kwaivgi/kling-v2.6-pro/image-to-video" },
         { label: "Vidu Q3", value: "vidu/q3/image-to-video" },
     ];
