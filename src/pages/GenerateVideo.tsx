@@ -883,7 +883,7 @@ const GenerateVideo = () => {
       return;
     }
     const isPromotional = videoType === "Promotional";
-    const hasMedia = isPromotional
+    const hasMedia = isPromotional && referenceType === "frames"
       ? promoFrames.start && promoFrames.end
       : selectedProduct?.id || uploadedImages.length > 0;
 
