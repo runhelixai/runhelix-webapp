@@ -5,6 +5,7 @@ export const commonApiEndpoints = {
     IMAGE_GENERATION: `${API_BASE_URL}/v1/media/image/generation`,
     VIDEO_WEBHOOK: `${API_BASE_URL}/v1/video-generation/webhook`,
     PROMO_VIDEO_WEBHOOK: `${API_BASE_URL}/v1/promo/video-generation/webhook`,
+    GEMINI_PROMO_VIDEO_WEBHOOK: `${API_BASE_URL}/v1/gemini/promo/video-generation/webhook`,
     PROMO_TRANSITION_VIDEO_WEBHOOK: `${API_BASE_URL}/v1/promo/transition-video-generation/webhook`,
 
     // Website Scraping
