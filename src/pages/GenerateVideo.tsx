@@ -339,6 +339,14 @@ const GenerateVideo = () => {
     }
   }, [mode, aspectRatio]);
 
+  useEffect(() => {
+    if (videoType === "Promotional") {
+      if (videoModel !== "veo-3.1" && videoModel !== "veo-3.1-fast") {
+        setVideoModel("veo-3.1");
+      }
+    }
+  }, [videoType, videoModel]);
+
 
 
   // Sync trimRange with videoMetadata
@@ -2286,6 +2294,7 @@ const GenerateVideo = () => {
                         videoModel={videoModel}
                         setVideoModel={setVideoModel}
                         isMobile={isMobile}
+                        videoType={videoType}
                       />
                     )}
 

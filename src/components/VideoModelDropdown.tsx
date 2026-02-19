@@ -13,6 +13,7 @@ interface Props {
     className?: string;
     isMobile?: boolean;
     disabled?: boolean;
+    videoType?: string;
 }
 
 const VideoModelDropdown: React.FC<Props> = ({
@@ -21,17 +22,23 @@ const VideoModelDropdown: React.FC<Props> = ({
     className = "",
     isMobile = false,
     disabled = false,
+    videoType,
 }) => {
-    const options: { label: string; value: string }[] = [
-        { label: "Sora 2", value: "sora-2" },
-        { label: "Sora 2 Pro", value: "sora-2-pro" },
+    const promotionalOptions = [
         { label: "Veo 3.1", value: "veo-3.1" },
         { label: "Veo 3.1 Fast", value: "veo-3.1-fast" },
+    ];
+
+    const ugcOptions = [
+        { label: "Sora 2", value: "sora-2" },
+        { label: "Veo 3.1", value: "veo-3.1" },
         { label: "Seedance 1.5", value: "bytedance/seedance-v1.5-pro/image-to-video" },
-        // { label: "Kling 2.5 Turbo Pro", value: "kwaivgi/kling-v2.5-turbo-pro/image-to-video" },
+        { label: "Kling 2.5 Turbo Pro", value: "kwaivgi/kling-v2.5-turbo-pro/image-to-video" },
         { label: "Kling 2.6 pro", value: "kwaivgi/kling-v2.6-pro/image-to-video" },
         { label: "Vidu Q3", value: "vidu/q3/image-to-video" },
     ];
+
+    const options = videoType === "Promotional" ? promotionalOptions : ugcOptions;
 
     const currentLabel = options.find((o) => o.value === videoModel)?.label || videoModel;
 
