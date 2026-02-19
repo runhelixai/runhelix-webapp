@@ -65,13 +65,14 @@ import {
 import AspectRatioDropdown from "../components/AspectRatioDropdown ";
 import ProductDropdown from "../components/ProductDropdown";
 import VideoTypeDropdown from "../components/VideoTypeDropdown";
-import VideoModelDropdown from "../components/VideoModelDropdown";
 import { commonApiEndpoints } from "@/helpers/commonApiEndpoints";
 import { config } from "@/lib/config";
 import MobileUserMenu from "@/components/MobileUserMenu";
 import { CouponModal } from "@/components/CouponModal";
 import UserNav from "@/components/layout/UserNav";
 import { LimitReachedModal } from "@/components/LimitReachedModal";
+import ReferenceTypeDropdown from "@/components/ReferenceTypeDropdown";
+import VideoModelDropdown from "@/components/VideoModelDropdown";
 
 const getCurrentUserOrGuestId = async () => {
   const { data } = await supabase.auth.getUser();
@@ -217,6 +218,7 @@ const GenerateVideo = () => {
   const [videoType, setVideoType] = useState<string>("");
   const [videoModel, setVideoModel] = useState<string>("sora-2");
   const [aspectRatio, setAspectRatio] = useState<string>("portrait");
+  const [referenceType, setReferenceType] = useState<"reference" | "frames">("reference");
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(1);
@@ -339,13 +341,14 @@ const GenerateVideo = () => {
     }
   }, [mode, aspectRatio]);
 
+  // Reset model to sensible default when video type changes
   useEffect(() => {
     if (videoType === "Promotional") {
-      if (videoModel !== "veo-3.1" && videoModel !== "veo-3.1-fast") {
-        setVideoModel("veo-3.1");
-      }
+      setVideoModel("veo-3.1");
+    } else {
+      setVideoModel("sora-2");
     }
-  }, [videoType, videoModel]);
+  }, [videoType]);
 
 
 
@@ -891,7 +894,7 @@ const GenerateVideo = () => {
       return;
     }
     const isPromotional = videoType === "Promotional";
-    const hasMedia = isPromotional
+    const hasMedia = isPromotional && referenceType === "frames"
       ? promoFrames.start && promoFrames.end
       : selectedProduct?.id || uploadedImages.length > 0;
 
@@ -938,7 +941,7 @@ const GenerateVideo = () => {
 
       if (mode === "image-to-video") {
         // JSON payload
-        if (videoType === "Promotional") {
+        if (videoType === "Promotional" && referenceType === "frames") {
           endpoint = commonApiEndpoints.PROMO_TRANSITION_VIDEO_WEBHOOK;
           const payload: any = {
             user_content: currentDescription || "Create a promotional video",
@@ -946,6 +949,7 @@ const GenerateVideo = () => {
             last_frame_base64: promoFrames.end?.split(",")[1] || "",
             image_ratio: aspectRatio || "portrait",
             promo_type: "animation",
+            model: videoModel,
           };
           if (user_id) payload.user_id = user_id;
           else if (session_id) payload.session_id = session_id;
@@ -966,25 +970,60 @@ const GenerateVideo = () => {
         } else {
           if (videoType === "UGC Testimonials") {
             endpoint = videoWebhookEndpoint;
+          } else if (videoType === "Promotional") {
+            // New Promotional Reference mode logic
+            endpoint = commonApiEndpoints.GEMINI_PROMO_VIDEO_WEBHOOK;
           } else {
             endpoint = commonApiEndpoints.PROMO_VIDEO_WEBHOOK;
           }
+
           const payload: any = {
             user_content: currentDescription,
             image_ratio: String(aspectRatio),
-            model: videoModel, // Include selected video model
-            seed: 42,
-            language: "english",
-            promo_type: "animation",
+            model: videoModel,
           };
 
-          const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
-          const base64Only = dataUrls.map((url) => url.split(",")[1]);
+          if (videoType === "Promotional" && referenceType === "reference") {
+            // Specific payload for Promotional Reference mode
+            payload.promo_type = "animation";
+            payload.language = "english";
+            payload.product_id = selectedProduct?.id || "";
 
-          if (selectedProduct?.id) {
-            payload.product_id = selectedProduct?.id;
+            let finalBase64 = "";
+            let base64Full: string | null = null;
+
+            if (selectedProduct?.media) {
+              // If product is selected, prioritize product media
+              try {
+                // linkToBase64 returns a data URL string
+                base64Full = await linkToBase64(selectedProduct.media as string);
+              } catch (e) {
+                console.error("Failed to convert product media to base64", e);
+              }
+            } else if (blobs.length > 0) {
+              // Fallback to uploaded images if no product
+              base64Full = await blobToBase64(blobs[0]);
+            }
+
+            if (base64Full) {
+              finalBase64 = base64Full.includes(",") ? base64Full.split(",")[1] : base64Full;
+            }
+
+            payload.image_base64 = finalBase64;
+            // Ensure verify user_content is set correctly if empty
+            if (!currentDescription) {
+              payload.user_content = "Create a promotional video";
+            }
           } else {
-            payload.image_base64 = base64Only[0] || "";
+            // UGC or other modes
+            const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
+            const base64Only = dataUrls.map((url) => url.split(",")[1]);
+
+            if (selectedProduct?.id) {
+              payload.product_id = selectedProduct?.id;
+            } else {
+              payload.image_base64 = base64Only[0] || "";
+            }
           }
 
           if (user_id) payload.user_id = user_id;
@@ -2020,7 +2059,7 @@ const GenerateVideo = () => {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                {(uploadedImages.length > 0 || (selectedProduct?.media && videoType !== "Promotional")) && !(videoType === "Promotional" && promoFrames.start && promoFrames.end) ? (
+                {(uploadedImages.length > 0 || selectedProduct?.media) && !(videoType === "Promotional" && referenceType === "frames") ? (
                   <div className="px-5 pt-5 flex flex-wrap gap-3">
                     {uploadedImages.map((img, index) => (
                       <div
@@ -2051,7 +2090,7 @@ const GenerateVideo = () => {
                         </button>
                       </div>
                     ))}
-                    {selectedProduct?.media && videoType !== "Promotional" && (
+                    {selectedProduct?.media && (
                       <div
                         className="w-20 h-20 cursor-pointer relative"
                       >
@@ -2075,7 +2114,7 @@ const GenerateVideo = () => {
                   </div>
                 ) : null}
 
-                {videoType === "Promotional" ? (
+                {videoType === "Promotional" && referenceType === "frames" ? (
                   <div className="px-5 pt-5 flex flex-wrap gap-3">
                     {/* Start Frame Slot */}
                     <div
@@ -2192,7 +2231,7 @@ const GenerateVideo = () => {
                   placeholder="Describe your next video or paste a script..."
                   required
                 />
-                <div className="hidden max-mobile:block max-mobile:px-3 max-mobile:pb-2">
+                {/* <div className="hidden max-mobile:block max-mobile:px-3 max-mobile:pb-2">
                   <button
                     type="button"
                     onClick={triggerFileInput}
@@ -2201,7 +2240,7 @@ const GenerateVideo = () => {
                     <Paperclip className="w-4 h-4 shrink-0" />
                     <span>Media</span>
                   </button>
-                </div>
+                </div> */}
                 <div
                   className={`flex justify-between pb-4 max-mobile:px-3 max-mobile:flex-row px-5 ${isMobile && user?.id
                     ? "flex-col gap-5 max-mobile:gap-2 items-start"
@@ -2217,14 +2256,14 @@ const GenerateVideo = () => {
                     className="hidden"
                   />
                   <div className="flex items-center gap-3">
-                    <button
+                    {/* <button
                       type="button"
                       onClick={triggerFileInput}
                       className="inline-flex max-mobile:text-xs max-mobile:hidden items-center gap-2 rounded-full px-5 py-2.5 max-mobile:px-2.5 text-sm font-semibold text-white border bg-gradient-to-r from-[#29A6B4] to-[#9ED2C3]             hover:bg-[#29A6B4]/10 transition-colors focus:outline-none focus:ring-2 shadow-sm"
                     >
                       <Paperclip className="w-4 h-4 shrink-0" />
                       <span>Media</span>
-                    </button>
+                    </button> */}
                     {!user?.id ? (
                       <VideoTypeDropdown
                         mode={mode}
@@ -2233,20 +2272,29 @@ const GenerateVideo = () => {
                         isMobile={isMobile}
                       />
                     ) : (
-                      <ProductDropdown
-                        userId={user?.id}
-                        products={products}
-                        selectedProduct={selectedProduct}
-                        onAddProduct={() => {
-                          setProductDrawerView("add");
-                          setIsProductDrawerOpen(true);
-                        }}
-                        onViewAll={() => {
-                          setProductDrawerView("list");
-                          setIsProductDrawerOpen(true);
-                        }}
-                        isMobile={isMobile}
-                      />
+                      <>
+                        <ProductDropdown
+                          userId={user?.id}
+                          products={products}
+                          selectedProduct={selectedProduct}
+                          onAddProduct={() => {
+                            setProductDrawerView("add");
+                            setIsProductDrawerOpen(true);
+                          }}
+                          onViewAll={() => {
+                            setProductDrawerView("list");
+                            setIsProductDrawerOpen(true);
+                          }}
+                          isMobile={isMobile}
+                        />
+                        {videoType === "Promotional" && (
+                          <ReferenceTypeDropdown
+                            value={referenceType}
+                            onChange={setReferenceType}
+                            isMobile={isMobile}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -2261,6 +2309,14 @@ const GenerateVideo = () => {
                         mode={mode}
                         videoType={videoType}
                         setVideoType={setVideoType}
+                        isMobile={isMobile}
+                      />
+                    )}
+                    {user?.id && mode === "image-to-video" && (
+                      <VideoModelDropdown
+                        videoModel={videoModel}
+                        setVideoModel={setVideoModel}
+                        videoType={videoType}
                         isMobile={isMobile}
                       />
                     )}
@@ -2281,7 +2337,6 @@ const GenerateVideo = () => {
                       selectedProductId={selectedProduct?.id}
                     />
 
-
                     <AspectRatioDropdown
                       aspectRatio={aspectRatio}
                       setAspectRatio={setAspectRatio}
@@ -2289,22 +2344,15 @@ const GenerateVideo = () => {
                       mode={mode}
                     />
 
-                    {mode === "image-to-video" && (
-                      <VideoModelDropdown
-                        videoModel={videoModel}
-                        setVideoModel={setVideoModel}
-                        isMobile={isMobile}
-                        videoType={videoType}
-                      />
-                    )}
-
                     <button
                       id="tour-generate-button"
                       type="button"
                       onClick={handleGenerate}
                       disabled={
                         (videoType === "Promotional"
-                          ? !(promoFrames.start && promoFrames.end)
+                          ? referenceType === "frames"
+                            ? !(promoFrames.start && promoFrames.end)
+                            : !(selectedProduct?.id || uploadedImages.length)
                           : selectedProduct?.id
                             ? false
                             : !uploadedImages.length) ||
@@ -2313,7 +2361,9 @@ const GenerateVideo = () => {
                       }
                       // disabled={!description.trim() || isGenerating}
                       className={`py-2.5 px-7 max-mobile:text-xs max-mobile:px-0 max-mobile:w-10 max-mobile:h-10 max-mobile:flex max-mobile:items-center max-mobile:justify-center  rounded-full text-sm font-semibold flex items-center border border-solid border-[#29A6B4] gap-2 ${(videoType === "Promotional"
-                        ? !(promoFrames.start && promoFrames.end)
+                        ? referenceType === "frames"
+                          ? !(promoFrames.start && promoFrames.end)
+                          : !(selectedProduct?.id || uploadedImages.length)
                         : selectedProduct?.id
                           ? false
                           : !uploadedImages.length) ||
@@ -2354,8 +2404,8 @@ const GenerateVideo = () => {
               ""
             )}
           </div>
-        </section>
-      </div>
+        </section >
+      </div >
       <div id="past-generations">
         {pastGenerations.length == 0 ? (
           ""
