@@ -1850,7 +1850,7 @@ const GenerateVideo = () => {
 
           <div className="bg-[url('/assets/images/banner-img.png')] bg-animation-keyframe dark:bg-[url('/assets/images/dark-mode.png')]  absolute bottom-0 left-0 w-full bg-cover bg-center h-full"></div>
           <div className="w-full pb-6 relative">
-            <div className="max-w-[1020px] w-full mx-auto px-5 max-mobile:px-2 pt-[100px]">
+            <div className="max-w-[1400px] w-full mx-auto px-5 max-mobile:px-2 pt-[100px]">
               {generatedVideo || isGenerating ? (
                 <div className="relative w-full max-w-[260px] mx-auto mb-5 rounded-xl overflow-hidden bg-white dark:bg-[#5b5e6d26] shadow-lg">
                   {isGenerating ? (
