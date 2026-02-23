@@ -240,8 +240,12 @@ export const TourProvider = ({ children }: { children: ReactNode }) => {
     setRun(true);
   };
 
+  // isProfileLoading should be true if auth is still loading OR if a user exists but their
+  // profile hasn't arrived yet. This prevents the tour from firing before has_seen_tour is known.
+  const isProfileLoading = isLoading || (!!user && userProfile === null);
+
   return (
-    <TourContext.Provider value={{ startTour, hasSeenTour: hasSeen, markTourAsSeen, isProfileLoading: isLoading }}>
+    <TourContext.Provider value={{ startTour, hasSeenTour: hasSeen, markTourAsSeen, isProfileLoading }}>
       {children}
       <Joyride
         run={run}

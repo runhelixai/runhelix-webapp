@@ -51,7 +51,7 @@ const VideoTypeDropdown: React.FC<Props> = ({
                     role="button"
                     tabIndex={0}
                 >
-                    <span className={`flex items-center gap-2 text-[#29A6B4] max-mobile:max-w-12 truncate text-sm font-medium`}>
+                    <span className={`flex items-center gap-2 text-[#29A6B4] max-mobile:max-w-[5rem] truncate text-sm font-medium`}>
                         {videoType}
                     </span>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300`} />
@@ -69,10 +69,10 @@ const VideoTypeDropdown: React.FC<Props> = ({
                         onClick={() => {
                             setVideoType(option.value);
                         }}
-                        className={`px-3 py-2.5 mb-0.5 cursor-pointer rounded-lg flex items-center gap-2 select-none text-sm font-medium transition-colors focus:bg-gray-50 dark:focus:bg-gray-700/50
+                        className={`px-3 py-2.5 mb-0.5 cursor-pointer rounded-lg flex items-center gap-2 select-none text-sm font-medium transition-colors
                                 ${videoType === option.value
-                                ? "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 focus:bg-teal-50 dark:focus:bg-teal-900/20"
-                                : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                ? "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 hover:text-teal-600 dark:hover:text-teal-400 focus:text-teal-600 dark:focus:text-teal-400 focus:bg-teal-50 dark:focus:bg-teal-900/20"
+                                : "text-gray-700 dark:text-gray-200 hover:text-gray-700 dark:hover:text-gray-200 focus:text-gray-700 dark:focus:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 focus:bg-gray-50 dark:focus:bg-gray-700/50"
                             }`}
                     >
                         <span>{option.label}</span>

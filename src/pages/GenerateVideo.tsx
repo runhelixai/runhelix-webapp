@@ -217,6 +217,7 @@ const GenerateVideo = () => {
   );
   const [videoType, setVideoType] = useState<string>("");
   const [videoModel, setVideoModel] = useState<string>("sora-2");
+  const [videoCreditId, setVideoCreditId] = useState<string>("");
   const [aspectRatio, setAspectRatio] = useState<string>("portrait");
   const [referenceType, setReferenceType] = useState<"reference" | "frames">("reference");
   const [isPlaying, setIsPlaying] = useState(true);
@@ -944,25 +945,18 @@ const GenerateVideo = () => {
         if (videoType === "Promotional" && referenceType === "frames") {
           endpoint = commonApiEndpoints.PROMO_TRANSITION_VIDEO_WEBHOOK;
           const payload: any = {
-            user_content: currentDescription || "Create a promotional video",
+            user_content: currentDescription || "Create a seamless transition video",
             first_frame_base64: promoFrames.start?.split(",")[1] || "",
             last_frame_base64: promoFrames.end?.split(",")[1] || "",
             image_ratio: aspectRatio || "portrait",
             promo_type: "animation",
+            language: "english",
             model: videoModel,
           };
           if (user_id) payload.user_id = user_id;
           else if (session_id) payload.session_id = session_id;
-          // Note: product_id is empty in curl, user_id empty in curl (but we should send ours).
-          // We intentionally do NOT set product_id for Promotional videos based on user request.
-          // if (selectedProduct?.id) {
-          //   payload.product_id = selectedProduct.id;
-          // } else {
-          //   payload.product_id = "";
-          // }
-
-          // Image ratio
-          payload.image_ratio = aspectRatio || "portrait";
+          if (selectedProduct?.id) payload.product_id = selectedProduct.id;
+          if (videoCreditId) payload.credit_id = videoCreditId;
 
           headers = { "Content-Type": "application/json" };
           body = JSON.stringify(payload);
@@ -987,7 +981,9 @@ const GenerateVideo = () => {
             // Specific payload for Promotional Reference mode
             payload.promo_type = "animation";
             payload.language = "english";
+            payload.seed = 42;
             payload.product_id = selectedProduct?.id || "";
+            if (videoCreditId) payload.credit_id = videoCreditId;
 
             let finalBase64 = "";
             let base64Full: string | null = null;
@@ -1015,7 +1011,12 @@ const GenerateVideo = () => {
               payload.user_content = "Create a promotional video";
             }
           } else {
-            // UGC or other modes
+            // UGC Testimonials
+            payload.promo_type = "animation";
+            payload.language = "english";
+            payload.seed = 42;
+            if (videoCreditId) payload.credit_id = videoCreditId;
+
             const dataUrls = await Promise.all(blobs.map((b) => blobToBase64(b)));
             const base64Only = dataUrls.map((url) => url.split(",")[1]);
 
@@ -2242,8 +2243,8 @@ const GenerateVideo = () => {
                   </button>
                 </div> */}
                 <div
-                  className={`flex justify-between pb-4 max-mobile:px-3 max-mobile:flex-row px-5 ${isMobile && user?.id
-                    ? "flex-col gap-5 max-mobile:gap-2 items-start"
+                  className={`flex justify-between pb-4 max-mobile:px-3 max-mobile:flex-col max-mobile:gap-2 px-5 ${isMobile && user?.id
+                    ? "flex-col gap-5 items-start"
                     : "items-center"
                     }`}
                 >
@@ -2301,8 +2302,7 @@ const GenerateVideo = () => {
                   <div
                     id="tour-settings-section"
                     ref={productRef}
-                    className={`flex items items-center gap-2 ${isMobile ? "gap-6 max-mobile:gap-2" : ""
-                      }`}
+                    className={`flex items-center gap-2 max-mobile:overflow-x-auto max-mobile:pb-0.5`}
                   >
                     {user?.id && (
                       <VideoTypeDropdown
@@ -2316,6 +2316,7 @@ const GenerateVideo = () => {
                       <VideoModelDropdown
                         videoModel={videoModel}
                         setVideoModel={setVideoModel}
+                        setVideoCreditId={setVideoCreditId}
                         videoType={videoType}
                         isMobile={isMobile}
                       />
@@ -2359,8 +2360,7 @@ const GenerateVideo = () => {
                         !description.trim() ||
                         isGenerating
                       }
-                      // disabled={!description.trim() || isGenerating}
-                      className={`py-2.5 px-7 max-mobile:text-xs max-mobile:px-0 max-mobile:w-10 max-mobile:h-10 max-mobile:flex max-mobile:items-center max-mobile:justify-center  rounded-full text-sm font-semibold flex items-center border border-solid border-[#29A6B4] gap-2 ${(videoType === "Promotional"
+                      className={`py-2.5 px-5 max-mobile:px-3 max-mobile:text-xs rounded-full text-sm font-semibold flex items-center border border-solid border-[#29A6B4] gap-1.5 whitespace-nowrap shrink-0 ${(videoType === "Promotional"
                         ? referenceType === "frames"
                           ? !(promoFrames.start && promoFrames.end)
                           : !(selectedProduct?.id || uploadedImages.length)
@@ -2376,9 +2376,8 @@ const GenerateVideo = () => {
                       {isGenerating ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin" />
-                          <span className="max-mobile:hidden">
-                            Running Helix...
-                          </span>
+                          <span className="max-mobile:hidden">Running Helix...</span>
+                          <span className="hidden max-mobile:inline">Running...</span>
                         </>
                       ) : (
                         <>

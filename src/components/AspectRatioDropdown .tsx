@@ -89,10 +89,10 @@ const AspectRatioDropdown = ({ aspectRatio, setAspectRatio, isMobile = false, in
                         <DropdownMenuItem
                             key={value}
                             onClick={() => handleSelect(value)}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors focus:bg-gray-50 dark:focus:bg-gray-700/50
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors
                                             ${isActive
-                                    ? "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 font-medium focus:bg-teal-50 dark:focus:bg-teal-900/20"
-                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-100"
+                                    ? "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-400 focus:text-teal-600 dark:focus:text-teal-400 focus:bg-teal-50 dark:focus:bg-teal-900/20"
+                                    : "text-gray-700 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300 focus:text-gray-700 dark:focus:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 focus:bg-gray-50 dark:focus:bg-gray-700/50"
                                 }`}
                         >
                             <Icon className={`w-4 h-4 ${isActive ? "text-teal-500" : "text-gray-400 group-hover:text-gray-500"}`} />
