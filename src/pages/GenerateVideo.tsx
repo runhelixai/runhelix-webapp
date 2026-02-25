@@ -73,6 +73,8 @@ import UserNav from "@/components/layout/UserNav";
 import { LimitReachedModal } from "@/components/LimitReachedModal";
 import ReferenceTypeDropdown from "@/components/ReferenceTypeDropdown";
 import VideoModelDropdown from "@/components/VideoModelDropdown";
+import VideoResolutionDropdown from "@/components/VideoResolutionDropdown";
+import { VideoModelOption } from "@/hooks/useVideoModels";
 
 const getCurrentUserOrGuestId = async () => {
   const { data } = await supabase.auth.getUser();
@@ -218,6 +220,8 @@ const GenerateVideo = () => {
   const [videoType, setVideoType] = useState<string>("");
   const [videoModel, setVideoModel] = useState<string>("sora-2");
   const [videoCreditId, setVideoCreditId] = useState<string>("");
+  const [videoResolution, setVideoResolution] = useState<string | null>(null);
+  const [videoResolutionOptions, setVideoResolutionOptions] = useState<VideoModelOption[]>([]);
   const [aspectRatio, setAspectRatio] = useState<string>("portrait");
   const [referenceType, setReferenceType] = useState<"reference" | "frames">("reference");
   const [isPlaying, setIsPlaying] = useState(true);
@@ -349,6 +353,9 @@ const GenerateVideo = () => {
     } else {
       setVideoModel("sora-2");
     }
+    // Reset resolution state when type changes
+    setVideoResolution(null);
+    setVideoResolutionOptions([]);
   }, [videoType]);
 
 
@@ -953,6 +960,7 @@ const GenerateVideo = () => {
             language: "english",
             model: videoModel,
           };
+          if (videoResolution) payload.resolution = videoResolution;
           if (user_id) payload.user_id = user_id;
           else if (session_id) payload.session_id = session_id;
           if (selectedProduct?.id) payload.product_id = selectedProduct.id;
@@ -976,6 +984,7 @@ const GenerateVideo = () => {
             image_ratio: String(aspectRatio),
             model: videoModel,
           };
+          if (videoResolution) payload.resolution = videoResolution;
 
           if (videoType === "Promotional" && referenceType === "reference") {
             // Specific payload for Promotional Reference mode
@@ -2315,9 +2324,37 @@ const GenerateVideo = () => {
                     {user?.id && mode === "image-to-video" && (
                       <VideoModelDropdown
                         videoModel={videoModel}
-                        setVideoModel={setVideoModel}
+                        setVideoModel={(model) => {
+                          setVideoModel(model);
+                          // Reset resolution when model changes manually
+                          setVideoResolution(null);
+                        }}
                         setVideoCreditId={setVideoCreditId}
+                        onResolutionsChange={(resolutions) => {
+                          setVideoResolutionOptions(resolutions);
+                          // Auto-select first resolution when model changes
+                          if (resolutions.length >= 2) {
+                            setVideoResolution(resolutions[0].resolution);
+                            setVideoCreditId(resolutions[0].creditId);
+                          } else {
+                            setVideoResolution(null);
+                          }
+                        }}
                         videoType={videoType}
+                        isMobile={isMobile}
+                        defaultModelValue={
+                          videoType === "UGC Testimonials" ? "sora-2" : undefined
+                        }
+                      />
+                    )}
+                    {user?.id && mode === "image-to-video" && videoResolutionOptions.length >= 2 && (
+                      <VideoResolutionDropdown
+                        resolutions={videoResolutionOptions}
+                        selectedResolution={videoResolution}
+                        onResolutionChange={(resolution, creditId) => {
+                          setVideoResolution(resolution);
+                          setVideoCreditId(creditId);
+                        }}
                         isMobile={isMobile}
                       />
                     )}

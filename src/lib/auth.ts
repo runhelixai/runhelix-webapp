@@ -430,7 +430,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             full_name: name,
             user_name: userName,
             phone,
-            user_type: userType, // Pass userType to metadata as well
+            user_type: userType,
           },
         },
       });
@@ -440,9 +440,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw signUpError;
       }
 
-
       if (!authData.user) {
         throw new Error('User creation failed - no user data returned');
+      }
+
+      // Detect if this is an orphaned auth user (exists in auth.users but deleted from public.users).
+      // Supabase returns the existing auth user when the email is already registered,
+      // with an empty `identities` array as a signal that the account already exists.
+      const isOrphanedAuthUser =
+        authData.user.identities !== undefined &&
+        authData.user.identities.length === 0;
+
+      if (isOrphanedAuthUser) {
+        // The user exists in auth but was deleted from the public users table.
+        // We can't re-use this auth account without admin privileges to delete it first.
+        // Give the user a clear, actionable error message.
+        throw new Error(
+          'An account with this email already exists in our system. Please contact support or try signing in instead.'
+        );
       }
 
       // Initialize drip status via Edge Function
@@ -453,17 +468,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         else console.log("Invoked send-drip-email successfully");
       });
 
-      // Insert into email_drip_status table
-      // We use authData.user.id directly which is guaranteed to be present here
+      // Insert into email_drip_status table - use upsert to handle any existing records
       const { error: dripError } = await supabase
         .from("email_drip_status")
-        .insert({ user_id: authData.user.id });
+        .upsert({ user_id: authData.user.id }, { onConflict: 'user_id', ignoreDuplicates: true });
 
       if (dripError) {
         console.error("Error inserting drip status:", dripError);
       }
 
-      // Then create/update the user profile in the users table
+      // Create/update the user profile in the users table using upsert to handle
+      // any race conditions or orphaned records
       const profileUpdates: any = {
         id: authData.user.id,
         email: email,
@@ -478,13 +493,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const { data: profileData, error: profileError } = await supabase
         .from('users')
-        .upsert(profileUpdates)
+        .upsert(profileUpdates, { onConflict: 'id' })
         .select()
         .single();
 
-
       if (profileError) {
         console.error('Profile creation error:', profileError);
+        // Check if it's the FK constraint error (orphaned auth user edge case)
+        if (profileError.code === '23503' || profileError.message?.includes('foreign key constraint')) {
+          throw new Error(
+            'An account with this email already exists. Please contact support or try signing in instead.'
+          );
+        }
         throw profileError;
       }
       // Send signup email notification only for beta users

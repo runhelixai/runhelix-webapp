@@ -6,12 +6,16 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useVideoModels } from "@/hooks/useVideoModels";
+import { useVideoModels, VideoModelOption } from "@/hooks/useVideoModels";
 
 interface Props {
     videoModel: string;
     setVideoModel: (model: string) => void;
     setVideoCreditId?: (creditId: string) => void;
+    /** Called whenever the available resolutions for the active model change */
+    onResolutionsChange?: (resolutions: VideoModelOption[]) => void;
+    /** The video_model value that should be badged as "(default)" in the list */
+    defaultModelValue?: string;
     className?: string;
     isMobile?: boolean;
     disabled?: boolean;
@@ -22,12 +26,14 @@ const VideoModelDropdown: React.FC<Props> = ({
     videoModel,
     setVideoModel,
     setVideoCreditId,
+    onResolutionsChange,
+    defaultModelValue,
     className = "",
     isMobile = false,
     disabled = false,
     videoType,
 }) => {
-    const { models, loading } = useVideoModels(videoType);
+    const { models, loading, getResolutionsForModel } = useVideoModels(videoType);
 
     // Track which row is highlighted by model_name (always unique per row).
     // This is needed because multiple rows can share the same video_model API value
@@ -41,16 +47,23 @@ const VideoModelDropdown: React.FC<Props> = ({
         if (models.length === 0) return;
 
         const matchedByValue = models.find((m) => m.value === videoModel);
-        if (matchedByValue) {
-            // Keep the current selection but sync the display name
-            setSelectedModelName(matchedByValue.label);
-            setVideoCreditId?.(matchedByValue.creditId);
-        } else {
-            // Current value is invalid for this type → default to first model
+        const targetModel = matchedByValue ?? models[0];
+
+        if (!matchedByValue) {
             setVideoModel(models[0].value);
-            setSelectedModelName(models[0].label);
-            setVideoCreditId?.(models[0].creditId);
         }
+
+        setSelectedModelName(targetModel.label);
+
+        // Compute resolutions for auto-selected model
+        const resolutions = getResolutionsForModel(targetModel.label);
+        // If no multi-resolution rows, use the first row's creditId directly
+        const creditId = resolutions.length >= 2
+            ? resolutions[0].creditId
+            : targetModel.creditId;
+
+        setVideoCreditId?.(creditId);
+        onResolutionsChange?.(resolutions);
     }, [models]);
 
     // The label shown in the trigger button
@@ -91,8 +104,27 @@ const VideoModelDropdown: React.FC<Props> = ({
                     <div className="px-3 py-2.5 text-sm text-gray-400 dark:text-gray-500 text-center">
                         No models available
                     </div>
-                ) : (
-                    models.map((option) => (
+                ) : (() => {
+                    // Safety-net: de-duplicate by normalised label before rendering
+                    // (guards against any edge case where the hook returns dupes)
+                    const seen = new Set<string>();
+                    const uniqueModels = models.filter((m) => {
+                        const key = m.label.trim().toLowerCase();
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    });
+
+                    // Pin the default model to the top of the list
+                    if (defaultModelValue) {
+                        uniqueModels.sort((a, b) => {
+                            if (a.value === defaultModelValue) return -1;
+                            if (b.value === defaultModelValue) return 1;
+                            return 0;
+                        });
+                    }
+
+                    return uniqueModels.map((option) => (
                         <DropdownMenuItem
                             // Use model_name as key — always unique per row
                             key={option.label}
@@ -101,8 +133,17 @@ const VideoModelDropdown: React.FC<Props> = ({
                                 setVideoModel(option.value);
                                 // Track selection by model_name for accurate highlighting
                                 setSelectedModelName(option.label);
-                                // Sync credit_id to parent
-                                setVideoCreditId?.(option.creditId);
+
+                                // Compute resolutions for newly selected model
+                                const resolutions = getResolutionsForModel(option.label);
+                                // If the model has multi-resolution rows, use first resolution's creditId;
+                                // parent will update it once user picks a resolution.
+                                const creditId = resolutions.length >= 2
+                                    ? resolutions[0].creditId
+                                    : option.creditId;
+
+                                setVideoCreditId?.(creditId);
+                                onResolutionsChange?.(resolutions);
                             }}
                             className={`px-3 py-2.5 mb-0.5 cursor-pointer rounded-lg flex items-center gap-2 select-none text-sm font-medium transition-colors
                                     ${selectedModelName === option.label
@@ -111,9 +152,14 @@ const VideoModelDropdown: React.FC<Props> = ({
                                 }`}
                         >
                             <span>{option.label}</span>
+                            {defaultModelValue && option.value === defaultModelValue && (
+                                <span className="ml-auto shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400">
+                                    default
+                                </span>
+                            )}
                         </DropdownMenuItem>
-                    ))
-                )}
+                    ));
+                })()}
             </DropdownMenuContent>
         </DropdownMenu>
     );
